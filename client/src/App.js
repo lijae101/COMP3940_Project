@@ -7,9 +7,9 @@ function Home() {
   const auth = useAuth();
 
   const signoutRedirect = () => {
-    const clientId = "508djusoe1r0n3f6fg7c2f4pm5"; // Your Cognito client ID
+    const clientId = "3hrro1o4857isbr4epti1s7nfi"; // Your Cognito client ID
     const logoutUri = "http://localhost:3000/logout"; // Your logout URL
-    const cognitoDomain = "https://us-west-1y9ltkrlpz.auth.us-west-1.amazoncognito.com"; // Your Cognito domain
+    const cognitoDomain = "https://us-west-2paw8u2saq.auth.us-west-2.amazoncognito.com"; // Your Cognito domain
 
     // Clear session and local storage to ensure the user is logged out
     sessionStorage.clear();

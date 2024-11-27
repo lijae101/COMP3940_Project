@@ -6,11 +6,11 @@ import reportWebVitals from './reportWebVitals';
 import { AuthProvider } from 'react-oidc-context';
 
 const cognitoAuthConfig = {
-  authority: "https://cognito-idp.us-west-1.amazonaws.com/us-west-1_Y9LtkRLpz",
-  client_id: "508djusoe1r0n3f6fg7c2f4pm5",
+  authority: "https://cognito-idp.us-west-2.amazonaws.com/us-west-2_PaW8U2Saq",
+  client_id: "3hrro1o4857isbr4epti1s7nfi",
   redirect_uri: "http://localhost:3000",
   response_type: "code",
-  scope: "email openid phone profile",
+  scope: "phone openid email",
 };
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
