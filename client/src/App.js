@@ -14,30 +14,29 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
-// Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-function Home() {
+function Home({ setFullScreen }) {
     const auth = useAuth();
     const [graphData, setGraphData] = useState([]);
-    const [metric, setMetric] = useState('heart_rate'); // Default metric
+    const [metric, setMetric] = useState('heart_rate');
     const [startDate, setStartDate] = useState(() => {
         const date = new Date();
-        date.setDate(date.getDate() - 7); // Default to 7 days ago
+        date.setDate(date.getDate() - 7);
         return date.toISOString().split('T')[0];
     });
-    const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]); // Default to today
+    const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
 
     const signoutRedirect = () => {
-        const clientId = '3hrro1o4857isbr4epti1s7nfi'; // Your Cognito client ID
-        const logoutUri = 'http://localhost:3000/logout'; // Your logout URL
-        const cognitoDomain = 'https://us-west-2paw8u2saq.auth.us-west-2.amazoncognito.com'; // Your Cognito domain
+        const clientId = '3hrro1o4857isbr4epti1s7nfi';
+        const logoutUri = 'http://localhost:3000/logout';
+        const cognitoDomain = 'https://us-west-2paw8u2saq.auth.us-west-2.amazoncognito.com';
 
-        // Clear session and local storage to ensure the user is logged out
         sessionStorage.clear();
         localStorage.clear();
 
-        // Redirect to Cognito logout URL
+        setFullScreen(true); // Reset to full screen for logout
+
         const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(
             logoutUri
         )}`;
@@ -46,6 +45,7 @@ function Home() {
 
     useEffect(() => {
         if (auth.isAuthenticated) {
+            setFullScreen(false); // Set small header when logged in
             fetch(
                 `http://localhost:3001/getGraphData?metric=${metric}&startDate=${startDate}&endDate=${endDate}`
             )
@@ -53,7 +53,7 @@ function Home() {
                 .then((data) => setGraphData(data))
                 .catch((error) => console.error('Error fetching graph data:', error));
         }
-    }, [auth.isAuthenticated, metric, startDate, endDate]);
+    }, [auth.isAuthenticated, metric, startDate, endDate, setFullScreen]);
 
     if (auth.isLoading) {
         return <div>Loading...</div>;
@@ -64,8 +64,6 @@ function Home() {
     }
 
     if (auth.isAuthenticated) {
-        const userName = auth.user?.profile.name || 'User';
-
         const labels = graphData.map((entry) => new Date(entry.time).toLocaleString());
         const values = graphData.map((entry) => entry.value);
 
@@ -100,9 +98,8 @@ function Home() {
 
         return (
             <div className="App">
-                <header className="App-header">
-                    <h1>Welcome, {userName}!</h1>
-                    <button onClick={signoutRedirect}>Sign out</button>
+                <header className="App-header small">
+                    <h1>Your Health Dashboard</h1>
                 </header>
                 <div className="controls">
                     <label htmlFor="metric">Select Metric: </label>
@@ -134,13 +131,14 @@ function Home() {
                 <div className="chart-container">
                     <Line data={chartData} options={options} />
                 </div>
+                <button onClick={signoutRedirect} className="signout-button">Sign out</button>
             </div>
         );
     }
 
     return (
         <div className="App">
-            <header className="App-header">
+            <header className="App-header full-screen">
                 <h1>Welcome to My App</h1>
                 <p>Please log in to continue.</p>
                 <button onClick={() => auth.signinRedirect()}>Sign in</button>
@@ -149,10 +147,14 @@ function Home() {
     );
 }
 
-function Logout() {
+function Logout({ setFullScreen }) {
+    useEffect(() => {
+        setFullScreen(true); // Ensure full screen on logout page
+    }, [setFullScreen]);
+
     return (
         <div className="App">
-            <header className="App-header">
+            <header className="App-header full-screen">
                 <h1>You have been logged out.</h1>
                 <a href="/">Return to Home</a>
             </header>
@@ -161,11 +163,13 @@ function Logout() {
 }
 
 function App() {
+    const [fullScreen, setFullScreen] = useState(true);
+
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/logout" element={<Logout />} />
+                <Route path="/" element={<Home setFullScreen={setFullScreen} />} />
+                <Route path="/logout" element={<Logout setFullScreen={setFullScreen} />} />
                 <Route path="*" element={<Navigate to="/" />} />
             </Routes>
         </Router>
