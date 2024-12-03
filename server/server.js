@@ -16,9 +16,11 @@ const timestreamQueryClient = new TimestreamQuery({
     },
 });
 
-// Endpoint to fetch data based on the selected metric
+// Endpoint to fetch data based on the selected metric and date range
 app.get('/getGraphData', async (req, res) => {
     const metric = req.query.metric; // Metric passed as query parameter
+    const startDate = req.query.startDate; // Start date passed as query parameter
+    const endDate = req.query.endDate; // End date passed as query parameter
     let tableName;
 
     // Map metrics to table names
@@ -43,7 +45,7 @@ app.get('/getGraphData', async (req, res) => {
         QueryString: `
             SELECT user_id, time, measure_value::double AS value
             FROM "HealthData"."${tableName}"
-            WHERE time > ago(7d)
+            WHERE time BETWEEN '${startDate}' AND '${endDate}'
             ORDER BY time ASC`,
     };
 
