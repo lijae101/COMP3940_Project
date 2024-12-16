@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import ChartComponent from './ChartComponent';
 import './Home.css';
 
-function Home({ theme, graphSettings, setGraphSettings, toggleTheme }) {
+
+
+
+
+function Home({ theme, graphSettings, setGraphSettings, toggleTheme, auth }) {
     const [graphData, setGraphData] = useState([]);
     const [metric, setMetric] = useState('heart_rate');
     const [startDate, setStartDate] = useState(() => {
@@ -11,9 +15,23 @@ function Home({ theme, graphSettings, setGraphSettings, toggleTheme }) {
         return date.toISOString().split('T')[0];
     });
     const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Modal visibility
+    const signoutRedirect = () => {
+        const clientId = '3hrro1o4857isbr4epti1s7nfi';
+        const logoutUri = 'http://localhost:3000/logout';
+        const cognitoDomain = 'https://us-west-2paw8u2saq.auth.us-west-2.amazoncognito.com';
 
+        sessionStorage.clear();
+        localStorage.clear();
+
+        // setFullScreen(true); // Reset to full screen for logout
+
+        const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(
+            logoutUri
+        )}`;
+        window.location.href = logoutUrl;
+    };
     useEffect(() => {
         fetch(
             `http://localhost:3001/getGraphData?metric=${metric}&startDate=${startDate}&endDate=${endDate}`
@@ -89,8 +107,8 @@ function Home({ theme, graphSettings, setGraphSettings, toggleTheme }) {
                 data={chartData}
                 options={options}
             />
+            
 
-            {/* Settings Modal */}
             {isSettingsOpen && (
                 <div className="modal">
                     <div className={`modal-content ${theme}`}>
@@ -174,12 +192,17 @@ function Home({ theme, graphSettings, setGraphSettings, toggleTheme }) {
                                     />
                                 </div>
                             </div>
+                            <div className="logout-option">
+                            <button onClick={signoutRedirect} className="signout-button">Sign out</button>
+
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
         </div>
     );
+    
 }
 
 export default Home;
