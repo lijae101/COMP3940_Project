@@ -1,0 +1,153 @@
+/* General Styling for AddGoal Component */
+.AddGoal {
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.AddGoal h1 {
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Labels and Inputs */
+.AddGoal label {
+    display: block;
+    margin-bottom: 15px;
+    text-align: left;
+    font-weight: bold;
+    color: #555;
+}
+
+.AddGoal input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-top: 5px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.AddGoal input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* Button Group */
+.button-group {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-around;
+}
+
+.button-group button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.button-group button:hover {
+    opacity: 0.9;
+}
+
+.button-group button:first-of-type {
+    background-color: #007bff;
+}
+
+.button-group button:last-of-type {
+    background-color: #dc3545;
+}
+
+/* Dark Theme Support */
+.dark .AddGoal {
+    background-color: #2e2e2e;
+    color: white;
+}
+
+.dark .AddGoal input {
+    background-color: #444;
+    color: white;
+    border: 1px solid #555;
+}
+
+.dark .AddGoal input:focus {
+    border-color: #007bff;
+}
+
+.dark .button-group button:first-of-type {
+    background-color: #4caf50;
+}
+
+.dark .button-group button:last-of-type {
+    background-color: #f44336;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+    .AddGoal {
+        margin: 20px;
+        padding: 15px;
+    }
+
+    .AddGoal h1 {
+        font-size: 1.5rem;
+    }
+
+    .button-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .button-group button {
+        width: 100%;
+    }
+}
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: red;
+}
+

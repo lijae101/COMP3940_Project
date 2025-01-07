@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaWalking, FaBed, FaBurn } from "react-icons/fa"; // Importing icons
 import "./Profile.css";
 
 function Profile({ theme, goals, graphData = {} }) {
@@ -10,10 +11,10 @@ function Profile({ theme, goals, graphData = {} }) {
         height: 175,
         weight: 70,
     });
+    const [emergencyNumber, setEmergencyNumber] = useState(() => localStorage.getItem("emergencyNumber") || "");
     const [editing, setEditing] = useState(false);
     const navigate = useNavigate();
 
-    // Request notification permission on component mount
     useEffect(() => {
         if ("Notification" in window) {
             Notification.requestPermission().then((permission) => {
@@ -33,25 +34,27 @@ function Profile({ theme, goals, graphData = {} }) {
 
     const handleSavePersonalInfo = () => setEditing(false);
 
+    const handleEmergencyNumberSave = () => {
+        localStorage.setItem("emergencyNumber", emergencyNumber);
+        alert("Emergency phone number saved!");
+    };
+
     const scheduleNotification = (time, message) => {
         const now = new Date();
         const [hours, minutes] = time.split(":").map(Number);
-    
+
         const targetTime = new Date();
         targetTime.setHours(hours, minutes, 0, 0);
-    
+
         const delay = targetTime.getTime() - now.getTime();
-        console.log(`Scheduling alert for "${message}" in ${delay}ms`);
-    
         if (delay > 0) {
             setTimeout(() => {
-                alert(message); // Use an alert to show the notification
+                alert(message); // Simple alert as a fallback for notifications
             }, delay);
         } else {
             console.warn(`Scheduled time "${time}" has already passed.`);
         }
     };
-    
 
     const handleSleepNotifications = (goal) => {
         if (goal.wakeUp) {
@@ -61,7 +64,6 @@ function Profile({ theme, goals, graphData = {} }) {
             scheduleNotification(goal.bedtime, "It's bedtime! Time to sleep.");
         }
     };
-    
 
     const calculateProgress = (metric, goal) => {
         const data = graphData[metric]?.map((entry) => entry.value) || [];
@@ -77,12 +79,11 @@ function Profile({ theme, goals, graphData = {} }) {
         if (!goal) return null;
 
         if (metric === "sleep" && typeof goal === "object") {
-            // Schedule notifications for sleep times
             handleSleepNotifications(goal);
 
             return (
                 <div className="progress-container" key={metric}>
-                    <h3>SLEEP</h3>
+                    <h3>SLEEP <FaBed /></h3>
                     <p>Wake-Up: {goal.wakeUp}</p>
                     <p>Bedtime: {goal.bedtime}</p>
                 </div>
@@ -91,9 +92,14 @@ function Profile({ theme, goals, graphData = {} }) {
 
         const progress = calculateProgress(metric, goal);
 
+        const icon =
+            metric === "steps" ? <FaWalking /> : metric === "calories" ? <FaBurn /> : null;
+
         return (
             <div className="progress-container" key={metric}>
-                <h3>{metric.replace("_", " ").toUpperCase()}</h3>
+                <h3>
+                    {metric.replace("_", " ").toUpperCase()} {icon}
+                </h3>
                 <div
                     className="circle"
                     style={{
@@ -108,6 +114,62 @@ function Profile({ theme, goals, graphData = {} }) {
             </div>
         );
     };
+
+    const detectDangerousHeartRate = () => {
+        const heartRateData = graphData.heart_rate?.map((entry) => entry.value) || [];
+
+        // Example rule: If heart rate exceeds 120 for more than 3 consecutive entries
+        const isDangerous = heartRateData.some((value, index, array) => {
+            return (
+                array[index] > 120 &&
+                array[index + 1] > 120 &&
+                array[index + 2] > 120
+            );
+        });
+
+        if (isDangerous) {
+            sendEmergencyNotification();
+        }
+    };
+
+    const sendEmergencyNotification = async () => {
+        if (!emergencyNumber) {
+            alert("No emergency number saved!");
+            return;
+        }
+    
+        const message = "Emergency Alert: Dangerous heart rate pattern detected!";
+    
+        try {
+            const response = await fetch("http://localhost:3001/sendEmergencySms", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    to: emergencyNumber,
+                    message,
+                }),
+            });
+    
+            const data = await response.json();
+    
+            if (data.success) {
+                alert(`Emergency SMS sent to ${emergencyNumber}`);
+            } else {
+                console.error(data.error);
+                alert("Failed to send SMS. Check server logs for details.");
+            }
+        } catch (error) {
+            console.error("Error sending emergency SMS:", error);
+            alert("Error sending SMS. Check console logs.");
+        }
+    };
+    
+
+    useEffect(() => {
+        detectDangerousHeartRate();
+    }, [graphData]);
 
     return (
         <div className={`Profile ${theme}`}>
@@ -176,6 +238,17 @@ function Profile({ theme, goals, graphData = {} }) {
                         <button onClick={handleEditPersonalInfo}>Edit</button>
                     </div>
                 )}
+            </div>
+
+            <div className="emergency-section">
+                <h2>Emergency Contact</h2>
+                <input
+                    type="text"
+                    placeholder="Enter emergency phone number"
+                    value={emergencyNumber}
+                    onChange={(e) => setEmergencyNumber(e.target.value)}
+                />
+                <button onClick={handleEmergencyNumberSave}>Save Emergency Number</button>
             </div>
 
             <div className="goal-buttons">

@@ -9,30 +9,40 @@ function Home({ theme, graphSettings, setGraphSettings, toggleTheme, auth }) {
         calories_burned: [],
         sleep_hours: [],
     });
-    const [startDate, setStartDate] = useState(() => {
-        const date = new Date();
-        date.setDate(date.getDate() - 7);
-        return date.toISOString().split("T")[0];
-    });
-    const [endDate, setEndDate] = useState(() => new Date().toISOString().split("T")[0]);
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [selectedRange, setSelectedRange] = useState("7d");
     const [summaryModal, setSummaryModal] = useState({ isOpen: false, content: "" });
 
     const metrics = ["heart_rate", "steps", "calories_burned", "sleep_hours"];
 
-    const signoutRedirect = () => {
-        const clientId = "3hrro1o4857isbr4epti1s7nfi";
-        const logoutUri = "http://localhost:3000/logout";
-        const cognitoDomain = "https://us-west-2paw8u2saq.auth.us-west-2.amazoncognito.com";
-
-        sessionStorage.clear();
-        localStorage.clear();
-
-        const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(
-            logoutUri
-        )}`;
-        window.location.href = logoutUrl;
+    const getStartDateFromRange = (range) => {
+        const date = new Date();
+        switch (range) {
+            case "7d":
+                date.setDate(date.getDate() - 7);
+                break;
+            case "14d":
+                date.setDate(date.getDate() - 14);
+                break;
+            case "1m":
+                date.setMonth(date.getMonth() - 1);
+                break;
+            case "3m":
+                date.setMonth(date.getMonth() - 3);
+                break;
+            case "6m":
+                date.setMonth(date.getMonth() - 6);
+                break;
+            case "1y":
+                date.setFullYear(date.getFullYear() - 1);
+                break;
+            default:
+                date.setDate(date.getDate() - 7);
+        }
+        return date.toISOString().split("T")[0];
     };
+
+    const startDate = getStartDateFromRange(selectedRange);
+    const endDate = new Date().toISOString().split("T")[0];
 
     useEffect(() => {
         metrics.forEach((metric) => {
@@ -48,7 +58,7 @@ function Home({ theme, graphSettings, setGraphSettings, toggleTheme, auth }) {
                 )
                 .catch((error) => console.error(`Error fetching data for ${metric}:`, error));
         });
-    }, [startDate, endDate]);
+    }, [selectedRange]);
 
     const chartOptions = (title) => ({
         responsive: true,
@@ -83,21 +93,23 @@ function Home({ theme, graphSettings, setGraphSettings, toggleTheme, auth }) {
     const renderChart = (metric, title) => (
         <div className={`chart-container ${theme}`} onClick={() => handleChartClick(metric)}>
             <h3>{title}</h3>
-            <ChartComponent
-                type={graphSettings.shape}
-                data={{
-                    labels: graphData[metric].map((entry) => entry.time),
-                    datasets: [
-                        {
-                            label: title,
-                            data: graphData[metric].map((entry) => entry.value),
-                            borderColor: graphSettings.color,
-                            backgroundColor: `${graphSettings.color}40`,
-                        },
-                    ],
-                }}
-                options={chartOptions(title)}
-            />
+            <div className="chart-wrapper">
+                <ChartComponent
+                    type={graphSettings.shape}
+                    data={{
+                        labels: graphData[metric].map((entry) => entry.time),
+                        datasets: [
+                            {
+                                label: title,
+                                data: graphData[metric].map((entry) => entry.value),
+                                borderColor: graphSettings.color,
+                                backgroundColor: `${graphSettings.color}40`,
+                            },
+                        ],
+                    }}
+                    options={chartOptions(title)}
+                />
+            </div>
         </div>
     );
 
@@ -110,32 +122,22 @@ function Home({ theme, graphSettings, setGraphSettings, toggleTheme, auth }) {
         });
     };
 
-    const sampleData = {
-        labels: ["Sample A", "Sample B", "Sample C"],
-        datasets: [
-            {
-                label: "Sample Preview",
-                data: [10, 20, 15],
-                borderColor: graphSettings.color,
-                backgroundColor: `${graphSettings.color}40`,
-            },
-        ],
-    };
-
     return (
         <div className={`Home ${theme}`}>
-            <header>
-                <h1>Your Health Dashboard</h1>
-                <button className="settings-button" onClick={() => setIsSettingsOpen(true)}>
-                    Open Settings
-                </button>
-            </header>
-
             <div className="controls">
-                <label>Start Date:</label>
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-                <label>End Date:</label>
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                <label>Date Range: Last  </label>
+                <select
+                    value={selectedRange}
+                    onChange={(e) => setSelectedRange(e.target.value)}
+                    className="date-range-selector"
+                >
+                    <option value="7d">7 Days</option>
+                    <option value="14d">2 Weeks</option>
+                    <option value="1m">1 Month</option>
+                    <option value="3m">3 Months</option>
+                    <option value="6m">6 Months</option>
+                    <option value="1y">1 Year</option>
+                </select>
             </div>
 
             <div className="charts">
@@ -144,59 +146,6 @@ function Home({ theme, graphSettings, setGraphSettings, toggleTheme, auth }) {
                 {renderChart("calories_burned", "Calories Burned")}
                 {renderChart("sleep_hours", "Sleep Hours")}
             </div>
-
-            {isSettingsOpen && (
-                <div className="modal">
-                    <div className={`modal-content ${theme}`}>
-                        <h2>Settings</h2>
-                        <button className="close-button" onClick={() => setIsSettingsOpen(false)}>
-                            Close
-                        </button>
-                        <div className="settings-options">
-                            <div>
-                                <label>Theme: </label>
-                                <select value={theme} onChange={(e) => toggleTheme(e.target.value)}>
-                                    <option value="light">Light</option>
-                                    <option value="dark">Dark</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>Graph Color: </label>
-                                <input
-                                    type="color"
-                                    value={graphSettings.color}
-                                    onChange={(e) =>
-                                        setGraphSettings((prev) => ({ ...prev, color: e.target.value }))
-                                    }
-                                />
-                                <div className="preview">
-                                    <ChartComponent type={graphSettings.shape} data={sampleData} />
-                                </div>
-                            </div>
-                            <div>
-                                <label>Graph Shape: </label>
-                                <select
-                                    value={graphSettings.shape}
-                                    onChange={(e) =>
-                                        setGraphSettings((prev) => ({ ...prev, shape: e.target.value }))
-                                    }
-                                >
-                                    <option value="line">Line</option>
-                                    <option value="bar">Bar</option>
-                                </select>
-                                <div className="preview">
-                                    <ChartComponent type={graphSettings.shape} data={sampleData} />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="logout-option">
-                            <button onClick={signoutRedirect} className="logout-button">
-                                Log Out
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {summaryModal.isOpen && (
                 <div className="modal">
