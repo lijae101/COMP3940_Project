@@ -76,7 +76,19 @@ function App() {
             },
         ],
     };
+    const signoutRedirect = () => {
+        const clientId = '3hrro1o4857isbr4epti1s7nfi';
+        const logoutUri = 'http://localhost:3000/logout';
+        const cognitoDomain = 'https://us-west-2paw8u2saq.auth.us-west-2.amazoncognito.com';
 
+        sessionStorage.clear();
+
+
+        const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(
+            logoutUri
+        )}`;
+        window.location.href = logoutUrl;
+    };
     return (
         <Router>
             <div className={`App ${theme}`}>
@@ -101,9 +113,10 @@ function App() {
                     <FaCog />  Settings
                     </Link>
                     
-                    <button className="logout-button" onClick={() => auth.signoutRedirect()}>
-                        <FaSignOutAlt /> Log Out
-                    </button>
+                    <Link className="nav-link" onClick={() => {signoutRedirect(); toggleMenu();}
+                    }>
+                        <FaSignOutAlt /> Logout
+                    </Link>
                 </nav>
 
                 {isSettingsOpen && (
